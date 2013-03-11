@@ -2,7 +2,8 @@
   "This namespace provides support for eBird data."
   (:use [teratorn.common]
         [cascalog.api]
-        [cascalog.more-taps :as taps :only (hfs-delimited)])
+        [cascalog.more-taps :as taps :only (hfs-delimited)]
+        [clojure.data.json :only (read-json)])
   (:require [clojure.string :as s]
             [clojure.java.io :as io]
             [cascalog.ops :as c]))
@@ -51,8 +52,7 @@
         ;;               ?lat ?lon ?precision ?theyear ?themonth)
         (valid-latlon? ?latitudeinterpreted ?longitudeinterpreted)
         (valid-name? ?scientificname)
-        ;;
-        (get-season ?lat ?themonth :> ?season)
+        ;; (get-season ?lat ?themonth :> ?season)
         )))
 
 (defn occ-query
@@ -181,6 +181,16 @@
 (defmain BuildCartoDBViews
   [source-path sink-path]
   (build-cartodb-views :source-path source-path :sink-path sink-path))
+
+(defmain EbirdToS3
+  "Sink local eBird textline to S3."
+  [source-path s3path]
+  (let [s3creds (read-json (slurp (io/resource "s3.json")))
+        key (:access-key s3creds)
+        secret (:secret-key s3creds)
+        sink (str "s3n://" key  ":" secret "@" s3path)]
+    (?- (hfs-textline sink :sinkmode :replace)
+        (hfs-textline source-path))))
 
 (comment
   (let [source-path (.getPath (io/resource "occ-test.tsv"))
