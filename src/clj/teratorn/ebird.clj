@@ -182,6 +182,17 @@
   [source-path sink-path]
   (build-cartodb-views :source-path source-path :sink-path sink-path))
 
+
+(defn ebird-s3
+  "Sink local eBird textline to S3."
+  [source-path s3path]
+  (let [s3creds (read-json (slurp (io/resource "s3.json")))
+        key (:access-key s3creds)
+        secret (:secret-key s3creds)
+        sink (str "s3n://" key  ":" secret "@" s3path)]
+    (?- (hfs-textline sink :sinkmode :replace)
+        (hfs-textline source-path))))
+
 (defmain EbirdToS3
   "Sink local eBird textline to S3."
   [source-path s3path]
