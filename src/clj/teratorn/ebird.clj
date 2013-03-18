@@ -6,36 +6,44 @@
         [clojure.data.json :only (read-json)])
   (:require [clojure.string :as s]
             [clojure.java.io :as io]
-            [cascalog.ops :as c]))
+            [cascalog.ops :as c]
+            [clojure.data.csv :as csv]))
 
 ;; Ordered column names from ebird dump.
-(def ebird-fields [])
+(def ebird-fields ["?global-unique-identifier" "?taxonomic-order" "?category" "?common-name" "?scientific-name" "?subspecies-common-name" "?subspecies-scientific-name" "?observation-count" "?breeding-bird-atlas-code" "?age-sex" "?country" "?country-code" "?state" "?state-code" "?county" "?county-code" "?iba-code" "?locality" "?locality-id" "?locality-type" "?latitude" "?longitude" "?observation-date" "?time-observations-started" "?trip-comments" "?species-comments" "?observer-id" "?first-name" "?last-name" "?sampling-event-identifier" "?protocol-type" "?project-code" "?duration-minutes" "?effort-distance-km" "?effort-area-ha" "?number-observers" "?all-species-reported" "?group-identifier" "?approved" "?reviewed" "?reason"])
 
 ;; Ordered column names for MOL master dataset schema.
-(def mol-fields ["?uuid" "?occurrenceid" "?taxonid" "?dataresourceid" "?kingdom"
-                 "?phylum" "?class" "?orderrank" "?family" "?genus"
-                 "?scientificname" "?datecollected" "?theyear" "?themonth"
-                 "?basisofrecord" "?countryisointerpreted" "?locality"
-                 "?county" "?continentorocean" "?stateprovince"
-                 "?lat" "?lon" "?precision" "?geospatialissue" "?lastindexed"
-                 "?season"])
+(def mol-fields ["?uuid" "?global-unique-identifier" "?taxonomic-order" "?category" "?common-name" "?scientific-name" "?subspecies-common-name" "?subspecies-scientific-name" "?observation-count" "?breeding-bird-atlas-code" "?age-sex" "?country" "?country-code" "?state" "?state-code" "?county" "?county-code" "?iba-code" "?locality" "?locality-id" "?locality-type" "?latitude" "?longitude" "?observation-date" "?time-observations-started" "?trip-comments" "?species-comments" "?observer-id" "?first-name" "?last-name" "?sampling-event-identifier" "?protocol-type" "?project-code" "?duration-minutes" "?effort-distance-km" "?effort-area-ha" "?number-observers" "?all-species-reported" "?group-identifier" "?approved" "?reviewed" "?reason" "?season", "?year", "?month", "?day"])
 
 ;; Ordered column names for MOL occ table schema.
-(def occ-fields ["?taxloc-uuid" "?uuid" "?occurrenceid" "?taxonid"
-                 "?dataresourceid" "?datecollected" "?theyear" "?themonth"
-                 "?basisofrecord" "?countryisointerpreted" "?locality" "?county"
-                 "?continentorocean" "?stateprovince" "?precision"
-                 "?geospatialissue" "?lastindexed" "?season"])
+(def occ-fields ["?taxloc-uuid" "?uuid" "?global-unique-identifier" "?taxonomic-order" "?category" "?common-name" "?scientific-name" "?subspecies-common-name" "?subspecies-scientific-name" "?observation-count" "?breeding-bird-atlas-code" "?age-sex" "?country" "?country-code" "?state" "?state-code" "?county" "?county-code" "?iba-code" "?locality" "?locality-id" "?locality-type" "?latitude" "?longitude" "?observation-date" "?time-observations-started" "?trip-comments" "?species-comments" "?observer-id" "?first-name" "?last-name" "?sampling-event-identifier" "?protocol-type" "?project-code" "?duration-minutes" "?effort-distance-km" "?effort-area-ha" "?number-observers" "?all-species-reported" "?group-identifier" "?approved" "?reviewed" "?reason" "?season", "?year", "?month", "?day"])
 
-;; Ordered column names for MOL occ table schema that include
-;; tax-uuid, loc-uuid.
-(def occ-fields-extras ["?taxloc-uuid" "?tax-uuid" "?loc-uuid" "?uuid"
-                        "?occurrenceid" "?taxonid" "?dataresourceid"
-                        "?datecollected" "?theyear" "?themonth" "?basisofrecord"
-                        "?countryisointerpreted" "?locality" "?county"
-                        "?continentorocean" "?stateprovince" "?precision"
-                        "?geospatialissue" "?lastindexed" "?season"])
 
+ (defn ebird-split-line
+  "Returns vector of line values by splitting on tab."
+  [line]
+  (let [vals (first (csv/read-csv line :separator \tab))
+        n (count vals)]
+    (cond (< n 41) (conj vals "")
+          (> n 41) (subvec vals 0 41)
+          :else vals)))
+
+(defn cleanup-data
+  "Cleanup data by handling rounding, missing data, etc."
+  [digits lat lon year month day]
+  (let [[lat lon clean-year clean-month clean-day] (map str->num-or-empty-str [lat lon year month day])]
+    (concat (map (partial round-to digits) [lat lon])
+            (map str [clean-year clean-month clean-day]))))
+
+(defn parse-date
+  "Return vector of year, month, day parsed out from supplied date string of the
+  form YYYY-MM-DD."
+  [date]
+  (try
+    (let [[year month day] (s/split date #"-")]
+      (map str [year month day]))
+    (catch Exception e
+        ["" "" ""])))
 
 (defn read-occurrences
   "Return Cascalog generator of ebird tuples with valid Scientific name and
@@ -46,14 +54,12 @@
     (<- mol-fields
         (src ?line)
         (gen-uuid :> ?uuid)
-        (s/replace ?line "\\N" "" :> ?clean-line)
-        (split-line ?clean-line :>> ebird-fields)
-        ;; (cleanup-data sigfigs ?latitudeinterpreted ?longitudeinterpreted ?coordinateprecision ?year ?month :>
-        ;;               ?lat ?lon ?precision ?theyear ?themonth)
-        (valid-latlon? ?latitudeinterpreted ?longitudeinterpreted)
-        (valid-name? ?scientificname)
-        ;; (get-season ?lat ?themonth :> ?season)
-        )))
+        (ebird-split-line ?line :>> ebird-fields)
+        (cleanup-data sigfigs ?latitude ?longitude ?year ?month ?day :> ?lat ?lon ?theyear ?themonth ?theday)
+        (valid-latlon? ?latitude ?longitude)
+        (valid-name? ?scientific-name)
+        (parse-date ?observation-date :> ?year ?month ?day)
+        (get-season ?lat ?themonth :> ?season))))
 
 (defn occ-query
   "Return generator of unique occurrences with a taxloc-id."
