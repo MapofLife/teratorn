@@ -1,4 +1,4 @@
-(defproject gulo "0.1.0-SNAPSHOT"
+(defproject teratorn "0.1.0-SNAPSHOT"
   :description "Big data processing on Hadoop for Map of Life."
   :repositories {"conjars" "http://conjars.org/repo/"
                  "gbif" "http://repository.gbif.org/content/groups/gbif/"
