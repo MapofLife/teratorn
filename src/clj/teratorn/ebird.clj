@@ -22,7 +22,7 @@
  (defn ebird-split-line
   "Returns vector of line values by splitting on tab."
   [line]
-  (let [vals (first (csv/read-csv line :separator \tab))
+  (let [vals (vec (.split line "\t"))
         n (count vals)]
     ;; e-bird lines have funky trailing tabs, so this hack deals with that:
     (cond (< n 41) (conj vals "")
