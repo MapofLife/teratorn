@@ -113,8 +113,10 @@
   (if (or (and (.startsWith x "\"") (.endsWith x "\""))
           (= "" x)
           (not (.contains x "\""))) 
-    x
-    (format "\"%s\"" (.replace x "\"" "\"\"") "\"" "\"\"")))
+    (s/replace x "'" "''")
+    (let [val (format "\"%s\"" (.replace x "\"" "\"\"") "\"" "\"\"")
+          val (s/replace val "'" "''")]
+      val)))
   
 (defn quotemaster
   "Maps quoter function over supplied vals."
