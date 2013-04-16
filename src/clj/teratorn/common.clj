@@ -65,11 +65,6 @@
            (apply str)
            (handle-zeros)))))
 
-(defn makeline
-  "Returns a string line by joining a sequence of values on tab."
-  [& vals]
-  (s/join \tab vals))
-
  (defn split-line
   "Returns vector of line values by splitting on tab."
   [line]
