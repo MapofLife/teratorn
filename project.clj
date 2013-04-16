@@ -8,7 +8,7 @@
   :dev-resources-path "dev"
   :jvm-opts ["-XX:MaxPermSize=256M"
              "-XX:+UseConcMarkSweepGC"
-             "-Xms5024M" "-Xmx5048M" "-server"]
+             "-Xms1024M" "-Xmx1048M" "-server"]
   :plugins [[lein-swank "1.4.4"]
             [lein-emr "0.1.0-SNAPSHOT"]]
   :profiles {:dev {:dependencies [[org.apache.hadoop/hadoop-core "0.20.2-dev"]
