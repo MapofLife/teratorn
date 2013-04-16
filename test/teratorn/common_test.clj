@@ -19,7 +19,8 @@
   (valid-latlon? "1.2" "2.3") => true
   (valid-latlon? 100 100.) => false
   (valid-latlon? "100" "100.") => false
-  (valid-latlon? "100" 1) => false)
+  (valid-latlon? "100" 1) => false
+  (valid-latlon? "100" "-.1") => true)
 
 (facts
   "Test str->num-or-empty-str"
