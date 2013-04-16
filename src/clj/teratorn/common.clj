@@ -4,6 +4,17 @@
             [clojure.java.io :as io]
             [cascalog.ops :as c]))
 
+(defn parse-double
+  "Wrapper for `java.lang.Double/parseDouble`, suitable for use with `map`.
+
+   Usage:
+     (parse-double \"-.1\")
+     ;=> -0.1
+     (map parse-double [\"100\" \"-.1\"])
+     ;=> (100 -0.1)"
+  [s]
+  (java.lang.Double/parseDouble s))
+
 (defn str->num-or-empty-str
   "Convert a string to a number with read-string and return it. If not a
    number, return an empty string.
@@ -80,17 +91,6 @@
   "Return a randomly generated UUID string."
   [& x]
   (str (java.util.UUID/randomUUID)))
-
-(defn parse-double
-  "Wrapper for `java.lang.Double/parseDouble`, suitable for use with `map`.
-
-   Usage:
-     (parse-double \"-.1\")
-     ;=> -0.1
-     (map parse-double [\"100\" \"-.1\"])
-     ;=> (100 -0.1)"
-  [s]
-  (java.lang.Double/parseDouble s))
 
 (defn valid-latlon?
   "Return true if lat and lon are valid decimal degrees,
