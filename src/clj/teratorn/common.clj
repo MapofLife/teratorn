@@ -81,6 +81,17 @@
   [& x]
   (str (java.util.UUID/randomUUID)))
 
+(defn parse-double
+  "Wrapper for `java.lang.Double/parseDouble`, suitable for use with `map`.
+
+   Usage:
+     (parse-double \"-.1\")
+     ;=> -0.1
+     (map parse-double [\"100\" \"-.1\"])
+     ;=> (100 -0.1)"
+  [s]
+  (java.lang.Double/parseDouble s))
+
 (defn valid-latlon?
   "Return true if lat and lon are valid decimal degrees,
    otherwise return false. Assumes that lat and lon are both either numeric
@@ -92,7 +103,7 @@
     (try
       (let [[lat lon] (if (number? lat)
                         [lat lon]
-                        (map read-string [lat lon]))
+                        (map parse-double [lat lon]))
             latlon-range {:lat-min -90 :lat-max 90 :lon-min -180 :lon-max 180}
             {:keys [lat-min lat-max lon-min lon-max]} latlon-range]
         (and (<= lat lat-max)
