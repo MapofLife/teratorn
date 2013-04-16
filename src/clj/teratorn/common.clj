@@ -17,7 +17,7 @@
    would otherwise cause parsing errors."
   [s]
   (try
-    (let [parsed-str (read-string s)]
+    (let [parsed-str (parse-double s)]
       (if (number? parsed-str)
         parsed-str
         ""))
