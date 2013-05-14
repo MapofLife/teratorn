@@ -4,6 +4,14 @@
             [clojure.java.io :as io]
             [cascalog.ops :as c]))
 
+;; eBird data resource id:
+(def ^:const EBIRD-ID "43")
+
+(defn not-ebird
+  "Return true if supplied id represents an eBird record, otherwise false."
+  [id]
+  (not= id EBIRD-ID))
+
 (defn parse-double
   "Wrapper for `java.lang.Double/parseDouble`, suitable for use with `map`.
 
@@ -178,3 +186,10 @@
           season (get (parse-hemisphere hemisphere)
                       (get-season-idx month))]
       (str (get season-map (format "%s %s" hemisphere season))))))
+
+(defn cleanup-data
+  "Cleanup data by handling rounding, missing data, etc."
+  [digits lat lon prec year month]
+  (let [[lat lon clean-prec clean-year clean-month] (map str->num-or-empty-str [lat lon prec year month])]
+    (concat (map (partial round-to digits) [lat lon clean-prec])
+            (map str [clean-year clean-month]))))
