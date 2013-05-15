@@ -43,9 +43,10 @@
     (catch Exception e "")))
 
 (defn handle-zeros
-  "Handle trailing decimal points and trailing zeros. A trailing decimal
-   point is removed entirely, while trailing zeros are only dropped if
-   they immediately follow the decimal point.
+  "Handle trailing decimal points and trailing zeros in a numeric
+   string. A trailing decimal point is removed entirely, while
+   trailing zeros are only dropped if they immediately follow the
+   decimal point.
 
    Usage:
      (handle-zeros \"3.\")
