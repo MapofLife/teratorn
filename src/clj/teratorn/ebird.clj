@@ -29,13 +29,6 @@
           (> n 41) (subvec vals 0 41)
           :else vals)))
 
-(defn cleanup-data
-  "Cleanup data by handling rounding, missing data, etc."
-  [digits lat lon year month day]
-  (let [[lat lon clean-year clean-month clean-day] (map str->num-or-empty-str [lat lon year month day])]
-    (concat (map (partial round-to digits) [lat lon])
-            (map str [clean-year clean-month clean-day]))))
-
 (defn parse-date
   "Return vector of year, month, day parsed out from supplied date string of the
   form YYYY-MM-DD."
