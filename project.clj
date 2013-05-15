@@ -10,7 +10,8 @@
              "-XX:+UseConcMarkSweepGC"
              "-Xms1024M" "-Xmx1048M" "-server"]
   :plugins [[lein-swank "1.4.4"]
-            [lein-emr "0.1.0-SNAPSHOT"]]
+            [lein-emr "0.1.0-SNAPSHOT"]
+            [lein-midje "3.0-beta1"]]
   :profiles {:dev {:dependencies [[org.apache.hadoop/hadoop-core "0.20.2-dev"]
                                   [cascalog/midje-cascalog "1.10.1-SNAPSHOT"]]}
              :plugins [[lein-midje "3.0-beta1"]]}
