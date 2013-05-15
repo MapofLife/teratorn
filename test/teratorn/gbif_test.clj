@@ -4,11 +4,8 @@
         [cascalog.api]
         [cascalog.more-taps :as taps :only (hfs-delimited)]
         [midje sweet cascalog]
-        [clojure.java.io :as io]
-        [clojure.contrib.java-utils :only (delete-file-recursively)])
-  (:require [clojure.string :as s])
-  (:import [com.google.common.io Files]
-           [org.gbif.dwc.record DarwinCoreRecord]))
+        [clojure.java.io :as io])
+  (:require [clojure.string :as s]))
 
 (def loc-data [["" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "41.576233" "-70.6336" "" "" ""]
                ["" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "" "41.576233" "-70.6336" "" "" ""]
