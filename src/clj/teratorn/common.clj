@@ -73,8 +73,11 @@
   "Round a value to a given number of decimal places and return a
    string. Note that this will drop all trailing zeros, and values like
    3.0 will be returned as \"3\""
-  [digits n]
-  (let [formatter (str "%." (str digits) "f")]
+  [digits n & {:keys [format-str] :or [format-str false]}]
+  (let [formatter (str "%." (str digits) "f")
+        string-or-double (fn [fmt s] (if (true? format-str)
+                                      s
+                                      (Double/parseDouble s)))]
     (if (= "" n)
       n
       (->> (format formatter (double n))
@@ -82,7 +85,8 @@
            (drop-while #{\0})
            reverse
            (apply str)
-           (handle-zeros)))))
+           (handle-zeros)
+           (string-or-double format-str)))))
 
 (defn makeline
   "Returns a string line by joining a sequence of values on tab."
@@ -189,7 +193,39 @@
 
 (defn cleanup-data
   "Cleanup data by handling rounding, missing data, etc."
-  [digits lat lon prec year month]
-  (let [[lat lon clean-prec clean-year clean-month] (map str->num-or-empty-str [lat lon prec year month])]
-    (concat (map (partial round-to digits) [lat lon clean-prec])
+  [digits lat lon prec year month & {:keys [format-str] :or [format-str false]}]
+  (let [[lat lon clean-prec clean-year clean-month]
+        (map str->num-or-empty-str [lat lon prec year month])]
+    (concat (map #(round-to digits % :format-str format-str) [lat lon clean-prec])
             (map str [clean-year clean-month]))))
+
+(defn positions
+  "Returns a lazy sequence containing the positions at which pred
+   is true for items in coll."
+  [pred coll]
+  (for [[idx elt] (map-indexed vector coll) :when (pred elt)] idx))
+
+(defn kw->field-str
+  "Convert a field name keyword or string to a Cascalog-style field string.
+
+   Usage:
+     (field->field-str :pubdate)
+     ;=> \"?pubdate\"
+
+     (field->field-str \"pubdate\")
+     ;=> \"?pubdate\""
+  [kw]
+  (str "?" (name kw)))
+
+(defn str->cascalog-field
+  "Prepend `?` to a string to make it suitable for use as a Cascalog field."
+  [s]
+  (str "?" s))
+
+(defn handle-sql-reserved
+  "Prepend underscore to strings in vector that match reserved words."
+  [v]
+  (let [reserved (set ["group" "order"])
+        idxs (positions #(contains? reserved %) v)
+        sqlize (fn [s] (str "_" s))]
+    (reduce #(update-in % [%2] sqlize) v idxs)))
