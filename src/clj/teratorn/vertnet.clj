@@ -5,7 +5,8 @@
         [teratorn.common])
   (:require [clojure.string :as s]
             [clojure.java.io :as io]
-            [cascalog.ops :as c]))
+            [cascalog.ops :as c]
+            [cascalog.io :as cio]))
 
 (def resource-fields
   "Ordered vector of fields used in resource map."
@@ -175,3 +176,18 @@
         (taxloc-src ?taxloc-uuid ?tax-uuid ?loc-uuid)
         (occ-src :>> occ-fields))))
 
+(defmain Shred
+  [harvest-path seq-path tables-path]
+  (let [seq-sink #(hfs-seqfile (.getPath (cio/temp-dir %)) :sinkmode :replace)
+        seq-source #(hfs-seqfile (.getPath (cio/temp-dir %))) 
+        harvest-src (hfs-textline harvest-path)
+        _ (?- (seq-sink "shred") (prep-harvested harvest-src))
+        src (seq-source "shred")
+        [sink-loc sink-tax sink-tax-loc sink-occ] (map seq-sink
+                                                       ["loc" "tax" "tax-loc" "occ"])]
+    (?- sink-loc (loc-query (seq-source "shred")))
+    (?- sink-tax (tax-query (seq-source "shred")))
+    (?- sink-tax-loc (taxloc-query (seq-source "tax") (seq-source "loc") src))
+    (?- sink-occ (occ-query (seq-source "tax")
+                            (seq-source "loc")
+                            (seq-source "tax-loc") src))))
