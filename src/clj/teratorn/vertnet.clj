@@ -16,7 +16,7 @@
 (def base-fields
   "Ordered vector of VertNet field names. Used as base for various
    vectors of column and Cascalog field names."
-  ["id" "associatedmedia" "associatedoccurrences" "associatedreferences"
+  ["harvest-id" "id" "associatedmedia" "associatedoccurrences" "associatedreferences"
    "associatedsequences" "associatedtaxa" "basisofrecord" "bed" "behavior"
    "catalognumber" "collectioncode" "collectionid" "continent"
    "coordinateprecision" "coordinateuncertaintyinmeters" "country" "countrycode"
