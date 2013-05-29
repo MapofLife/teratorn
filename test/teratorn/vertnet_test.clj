@@ -1,12 +1,13 @@
 (ns teratorn.vertnet-test
   "Unit test the teratorn.vertnet namespace."
   (:use teratorn.vertnet
-        teratorn.common
         [cascalog.api]
         [midje sweet cascalog])
   (:require [clojure.java.io :as io]
             [cascalog.ops :as c]
-            [cascalog.io :as cio]))
+            [cascalog.io :as cio]
+            [gulo.util :as u]
+            [gulo.fields :as f]))
 
 (def harvest-src
   (let [harvest-path (.getPath (io/resource "vertnet-test/harvested.txt"))
@@ -22,22 +23,21 @@
         harvest-src (hfs-textline harvest-path)
         src (prep-harvested harvest-src)]
     (<- [?url]
-        (src :>> occ-fields)))
+        (src :>> f/occ-fields)))
   => (produces-some
-      [["http://ipt.vertnet.org:8080/ipt/resource.do?r=ttrs_mammals"]]))
+      [["http://ipt.vertnet.org:8080/ipt/resource.do?r=ttrs_birds"]]))
 
 (fact "Check `tax-query`."
   (let [new-src (tax-query harvest-src :with-uuid true)]
     (<- [?scientificname ?kingdom ?phylum ?classs ?order ?family ?genus]
         (new-src _ ?scientificname ?kingdom ?phylum ?classs ?order ?family ?genus)))
-  => (produces-some [["Aplodontia rufa" "Animalia" "Chordata" "Mammalia"
-                      "Rodentia" "" "Aplodontia"]]))
+  => (produces-some [["Accipiter cooperii" "Animalia" "Chordata" "Aves" "" "" ""]]))
 
 (fact "Check `loc-query`."
   (let [new-src (loc-query harvest-src :with-uuid true)]
     (<- [?lat ?lon]
         (new-src _ ?lat ?lon)))
-  => (produces-some [[39.539146	-87.41389]]))
+  => (produces-some [[29.6519572 -84.8886108]]))
 
 (fact "Check `taxloc-query`. Doesn't check values of uuids, just
        ensures they're strings."
@@ -55,9 +55,9 @@
         taxloc-src (taxloc-query tax-src loc-src harvest-src :with-uuid true)
         src (harvest-tax-loc-query tax-src loc-src harvest-src)]
     (<- [?scientificname ?kingdom ?phylum ?classs ?order ?family ?genus ?lat ?lon]
-        (src :>> harvest-tax-loc-fields)))
-  => (produces-some [["Peromyscus maniculatus" "Animalia" "Chordata" "Mammalia"
-                      "Rodentia" "" "Peromyscus" 39.539146 -87.41389]]))
+        (src :>> f/harvest-tax-loc-fields)))
+  => (produces-some [["Actitis macularius" "Animalia" "Chordata" "Aves"
+                      "" "" "" 29.6519572 -84.8886108]]))
 
 (fact "Check `occ-query`."
   (let [loc-src (loc-query harvest-src :with-uuid true)
@@ -65,7 +65,6 @@
         taxloc-src (taxloc-query tax-src loc-src harvest-src :with-uuid true)
         src (occ-query tax-src loc-src taxloc-src harvest-src)]
     (<- [?scientificname ?kingdom ?phylum ?classs ?order ?family ?genus]
-        (src :>> vertnet-fields)))
+        (src :>> f/vertnet-fields)))
   => (produces-some
-      [["Peromyscus maniculatus" "Animalia" "Chordata" "Mammalia"
-        "Rodentia" "" "Peromyscus"]]))
+      [["Eudocimus albus" "Animalia" "Chordata" "Aves" "" "" ""]]))
