@@ -16,9 +16,10 @@
                                   [cascalog/midje-cascalog "1.10.1-SNAPSHOT"]]}
              :plugins [[lein-midje "3.0-beta1"]]}
   :dependencies [[org.clojure/clojure "1.4.0"]
-                 [cascalog "1.10.0"]                                                         ;
+                 [cascalog "1.10.0"]
                  [cascalog-more-taps "0.3.1-SNAPSHOT"]
                  [org.clojure/data.json "0.2.1"]
-                 [org.clojure/data.csv "0.1.2"]]
+                 [org.clojure/data.csv "0.1.2"]
+                 [gulo "0.1.0-SNAPSHOT"]]
   :min-lein-version "2.0.0"
   :aot [teratorn.common teratorn.gbif teratorn.ebird])
