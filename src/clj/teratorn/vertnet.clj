@@ -96,13 +96,14 @@
         (occ-src :>> f/occ-fields))))
 
 (defmain Shred
-  [harvest-path seq-path tables-path]
+  [harvest-path]
   (let [seq-sink #(hfs-seqfile (.getPath (cio/temp-dir %)) :sinkmode :replace)
+        text-sink #(hfs-textline (.getPath (cio/temp-dir %)) :sinkmode :replace)
         seq-source #(hfs-seqfile (.getPath (cio/temp-dir %))) 
         harvest-src (hfs-textline harvest-path)
         _ (?- (seq-sink "shred") (prep-harvested harvest-src))
         src (seq-source "shred")
-        [sink-loc sink-tax sink-tax-loc sink-occ] (map seq-sink
+        [sink-loc sink-tax sink-tax-loc sink-occ] (map text-sink
                                                        ["loc" "tax" "tax-loc" "occ"])]
     (?- sink-loc (loc-query (seq-source "shred")))
     (?- sink-tax (tax-query (seq-source "shred")))
