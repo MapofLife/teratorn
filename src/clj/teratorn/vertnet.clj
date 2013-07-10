@@ -103,11 +103,18 @@
         harvest-src (hfs-textline harvest-path)
         _ (?- (seq-sink "shred") (prep-harvested harvest-src))
         src (seq-source "shred")
-        [sink-loc sink-tax sink-tax-loc sink-occ] (map text-sink
+        [sink-loc sink-tax sink-tax-loc sink-occ] (map seq-sink
+                                                       ["loc" "tax" "tax-loc" "occ"])
+        [sink-loc-txt sink-tax-txt sink-tax-loc-txt sink-occ-txt] (map text-sink
                                                        ["loc" "tax" "tax-loc" "occ"])]
     (?- sink-loc (loc-query (seq-source "shred")))
     (?- sink-tax (tax-query (seq-source "shred")))
     (?- sink-tax-loc (taxloc-query (seq-source "tax") (seq-source "loc") src))
     (?- sink-occ (occ-query (seq-source "tax")
                             (seq-source "loc")
-                            (seq-source "tax-loc") src))))
+                            (seq-source "tax-loc") src))
+    ;; convert all to textline
+    (?- sink-loc-txt (seq-source "loc"))
+    (?- sink-tax-txt (seq-source "tax"))
+    (?- sink-tax-loc-txt (seq-source "tax-loc"))
+    (?- sink-occ-txt (seq-source "occ"))))
